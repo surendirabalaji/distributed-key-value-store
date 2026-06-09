@@ -1,0 +1,43 @@
+PART A: SEND LOG ENTRIES:
+
+1. propose() IMPLEMENTATION
+   ------------------------
+   ✅ Check if current node is leader
+   ✅ Create new log entry with:
+      - term = current_term
+      - index = log_.size()
+      - command = data (from parameter)
+   ✅ Append entry to leader's log
+   ✅ Return ProposalResult containing:
+      - index: where entry was appended
+      - term: current term
+      - is_leader: true/false
+   ✅ Trigger send_heartbeats() immediately to replicate
+
+2. send_heartbeats() UPDATES
+   --------------------------
+   ✅ For each peer, send entries from next_index_[peer] to end of log
+   ✅ Include prevLogIndex for log consistency check
+   ✅ Include prevLogTerm for log consistency check
+   ✅ Set leaderCommit in AppendEntries request
+   ✅ Spawn separate thread for each peer (non-blocking)
+   ✅ Unlock mutex before RPC, re-lock after
+
+3. AppendEntries HANDLER (Follower Side)
+   --------------------------------------
+   ✅ Reject if request.term < current_term (stale leader)
+   ✅ Step down to follower if request.term > current_term
+   ✅ Reset election timer (valid leader exists)
+   ✅ Convert candidate to follower if receiving valid AppendEntries
+   
+   LOG CONSISTENCY CHECK:
+   ✅ Check if prevLogIndex exists in log
+   ✅ Check if log[prevLogIndex].term matches prevLogTerm
+   ✅ Reject if consistency check fails
+   
+   APPEND ENTRIES:
+   ✅ For each entry in request:
+      - If entry already exists and matches: skip
+      - If entry conflicts (different term): delete conflicting entry and all following
+      - If new entry: append to log
+   ✅ Log each append operation
